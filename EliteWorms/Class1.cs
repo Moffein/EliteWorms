@@ -2,14 +2,11 @@
 using BepInEx.Configuration;
 using RoR2;
 using System;
-using System.Collections.Generic;
-using System.Linq;
-using UnityEngine;
 using UnityEngine.AddressableAssets;
 
 namespace EliteWorms
 {
-    [BepInPlugin("com.Moffein.EliteWorms", "EliteWorms", "1.0.0")]
+    [BepInPlugin("com.Moffein.EliteWorms", "EliteWorms", "1.0.1")]
     public class EliteWorms : BaseUnityPlugin
     {
         public void Awake()
@@ -18,7 +15,7 @@ namespace EliteWorms
                 true, new ConfigDescription("Allow Magma Worms to be elite.")).Value;
 
             bool allowOverloadingWorm = base.Config.Bind<bool>(new ConfigDefinition("Settings", "Allow Overloading Worm"),
-                false, new ConfigDescription("Allow Overloading Worms to be elite.")).Value;
+                true, new ConfigDescription("Allow Overloading Worms to be elite.")).Value;
 
             if (allowMagmaWorm)
             {
