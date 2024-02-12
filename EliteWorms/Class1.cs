@@ -12,65 +12,27 @@ namespace EliteWorms
     [BepInPlugin("com.Moffein.EliteWorms", "EliteWorms", "1.0.0")]
     public class EliteWorms : BaseUnityPlugin
     {
-        public static HashSet<BodyIndex> bodyIndexWhitelist = new HashSet<BodyIndex>();
-        public static List<string> bodyNameWhitelist;
-        public static bool applyToAll = false;
-
         public void Awake()
         {
-            ReadConfig();
+            bool allowMagmaWorm = base.Config.Bind<bool>(new ConfigDefinition("Settings", "Allow Magma Worm"),
+                true, new ConfigDescription("Allow Magma Worms to be elite.")).Value;
 
-            On.RoR2.CharacterSpawnCard.Awake += RemoveEliteRestriction;
-            RoR2.RoR2Application.onLoad += LoadBodyIndex;
-        }
+            bool allowOverloadingWorm = base.Config.Bind<bool>(new ConfigDefinition("Settings", "Allow Overloading Worm"),
+                false, new ConfigDescription("Allow Overloading Worms to be elite.")).Value;
 
-        private void RemoveEliteRestriction(On.RoR2.CharacterSpawnCard.orig_Awake orig, CharacterSpawnCard self)
-        {
-            if (CheckEligibility(self))
+            if (allowMagmaWorm)
             {
-                if (self.eliteRules == SpawnCard.EliteRules.ArtifactOnly) self.eliteRules = SpawnCard.EliteRules.Default;
-                self.noElites = false;
+                CharacterSpawnCard card = Addressables.LoadAssetAsync<CharacterSpawnCard>("RoR2/Base/MagmaWorm/cscMagmaWorm.asset").WaitForCompletion();
+                card.noElites = false;
+                card.eliteRules = SpawnCard.EliteRules.Default;
             }
 
-            orig(self);
-        }
-
-        private void ReadConfig()
-        {
-            applyToAll = base.Config.Bind<bool>(new ConfigDefinition("Settings", "Apply to All"),
-                false, new ConfigDescription("Disables elite restrictions on all enemies. (Overrides other settings)")).Value;
-
-            string bodyNames = base.Config.Bind<string>(new ConfigDefinition("Settings", "Body Whitelist"),
-                "MagmaWormBody", new ConfigDescription("Bodies to remove elite restrictions from, separated by comma. ex. MagmaWormBody, ElectricWormBody")).Value;
-
-            //parse bodynames
-            bodyNames = new string(bodyNames.ToCharArray().Where(c => !System.Char.IsWhiteSpace(c)).ToArray());
-            string[] splitBodies = bodyNames.Split(',');
-            foreach (string str in splitBodies)
+            if (allowOverloadingWorm)
             {
-
-                bodyNameWhitelist.Add(str);
+                CharacterSpawnCard card = Addressables.LoadAssetAsync<CharacterSpawnCard>("RoR2/Base/ElectricWorm/cscElectricWorm.asset").WaitForCompletion();
+                card.noElites = false;
+                card.eliteRules = SpawnCard.EliteRules.Default;
             }
-        }
-
-        private void LoadBodyIndex()
-        {
-            foreach(string str in bodyNameWhitelist)
-            {
-                BodyIndex index = BodyCatalog.FindBodyIndexCaseInsensitive(str);
-                if (index != BodyIndex.None) bodyIndexWhitelist.Add(index);
-            }
-        }
-
-        public static bool CheckEligibility(CharacterSpawnCard spawnCard)
-        {
-            if (applyToAll) return true;
-            if (spawnCard.prefab)
-            {
-                CharacterBody body = spawnCard.prefab.GetComponent<CharacterBody>();
-                if (body && bodyIndexWhitelist.Contains(body.bodyIndex)) return true;
-            }
-            return false;
         }
     }
 }
